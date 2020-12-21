@@ -1,0 +1,9 @@
+# development image for obelisk projects
+FROM jafonso/nix:latest
+
+# add binary caches
+RUN echo $'\
+binary-caches = https://cache.nixos.org https://nixcache.reflex-frp.org \n\
+binary-cache-public-keys = ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI=\n\
+trusted-public-keys =  cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI=\n\
+' >> /etc/nix/nix.conf
