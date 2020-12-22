@@ -12,6 +12,6 @@ Note: this assumes you have installed Docker and gnumake.
 
 ## Heroku Deploy
 
-Note: this assumes have the (`heroku`)[https://devcenter.heroku.com/articles/heroku-cli] command installed and you are logged in to heroku. To install on MacOS `brew tap heroku/brew && brew install heroku`. To install on Ubuntu `sudo snap install --classic heroku`.
+Note: this assumes have the [`heroku`](https://devcenter.heroku.com/articles/heroku-cli) command installed and you are logged in to heroku. To install on MacOS `brew tap heroku/brew && brew install heroku`. To install on Ubuntu `sudo snap install --classic heroku`.
 
 1. Exit the shell and run `make heroku-deploy`.
