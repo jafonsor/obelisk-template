@@ -6,8 +6,7 @@ A template to make it easier to develop obelisk apps inside a docker container.
 
 Note: this assumes you have installed Docker and gnumake.
 
-1. Run `make shell` to enter a shell with obelisk installed. The first time it might take a while.
-1. Inside the shell run `ob init --force`. This will setup the obelisk project.
+1. Run `make shell` to enter a shell with obelisk installed. The first time it will initialize the current directory with `ob init --force`. It might take a while.
 1. Run `ob run` to start the server.
 
 ## Heroku Deploy

@@ -55,13 +55,17 @@ obelisk-template/ids/dev-container-id: obelisk-template/ids/ obelisk-template/id
 		-p ${DEV-PORT}:${DEV-PORT} \
 		${DEV-IMAGE-NAME}:${DEV-IMAGE-TAG} \
 		/bin/bash -c \
-			"nix-shell obelisk-template/obeliskShell.nix" \
+			"nix-shell obelisk-template/obeliskShell.nix --run \"make default.nix && nix-shell obelisk-template/obeliskShell.nix\" " \
 	> obelisk-template/ids/dev-container-id;
 
 
 remove-dev-container:
 	docker container rm $(shell cat obelisk-template/ids/dev-container-id);
 	rm obelisk-template/ids/dev-container-id;
+
+# rule that inits obelisk
+default.nix:
+	ob init --force
 
 # Heroku aux rules
 
