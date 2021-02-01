@@ -4,11 +4,14 @@ HEROKU-PROJECT=${PROJECT-NAME}
 HEROKU-IMAGE-NAME=${PROJECT-NAME}-heroku
 HEROKU-IMAGE-TAG=latest
 
+RASPBERRYPI-IMAGE-NAME=${PROJECT-NAME}-raspberrypi
+RASPBERRYPI-IMAGE-TAG=latest
+
 DEV-IMAGE-TAG=latest
 DEV-IMAGE-NAME=obelisk
 DEV-PORT=8000
 
-NIX-IMAGE=jafonso/nix:2.3.7
+NIX-IMAGE=jafonso/nix:latest
 
 
 # ---- aux rules -----
@@ -28,7 +31,7 @@ obelisk-template/ids/nix-volume: obelisk-template/ids/
 	touch obelisk-template/ids/nix-volume
 
 
-remove-nix-volume:
+remove-nix-volume: remove-dev-container
 	if docker volume ls | grep -q " nix$$"; \
 	then \
 		docker volume rm nix; \
@@ -55,7 +58,7 @@ obelisk-template/ids/dev-container-id: obelisk-template/ids/ obelisk-template/id
 		-p ${DEV-PORT}:${DEV-PORT} \
 		${DEV-IMAGE-NAME}:${DEV-IMAGE-TAG} \
 		/bin/bash -c \
-			"nix-shell obelisk-template/obeliskShell.nix --run \"make default.nix && nix-shell obelisk-template/obeliskShell.nix\" " \
+			"./obelisk-template/start-shell.sh" \
 	> obelisk-template/ids/dev-container-id;
 
 
@@ -65,7 +68,7 @@ remove-dev-container:
 
 # rule that inits obelisk
 default.nix:
-	ob init --force
+	ob init --force --symlink $$(pwd)/obelisk-template/obelisk
 
 # Heroku aux rules
 
@@ -73,8 +76,8 @@ obelisk-template/ids/heroku-image.tar.gz: obelisk-template/ids/ obelisk-template
 	docker run --rm -ti -v nix:/nix -v $(shell pwd):/app -w=/app ${NIX-IMAGE} /bin/bash -c \
 	 "rm -f obelisk-template/ids/heroku-image.tar.gz && \
 	  nix-build \
-			--arg heroku-image-name '\"${HEROKU-IMAGE-NAME}\"' \
-			--arg heroku-image-tag '\"${HEROKU-IMAGE-TAG}\"' \
+			--arg image-name '\"${HEROKU-IMAGE-NAME}\"' \
+			--arg image-tag '\"${HEROKU-IMAGE-TAG}\"' \
 			-o obelisk-template/ids/prod-image \
 			-A heroku-image \
 			obelisk-template/main.nix && \
@@ -84,10 +87,32 @@ obelisk-template/ids/heroku-image.tar.gz: obelisk-template/ids/ obelisk-template
 
 deploy-local-heroku: obelisk-template/ids/heroku-image.tar.gz
 	docker load -i obelisk-template/ids/heroku-image.tar.gz
-	docker run --rm -ti -p ${DEV-PORT}:${DEV-PORT} ${PROJECT-NAME}-heroku:latest
+	docker run --rm -ti -p ${DEV-PORT}:${DEV-PORT} ${HEROKU-IMAGE-NAME}:${HEROKU-IMAGE-TAG}
 
 remove-heroku-image:
 	docker image rm ${HEROKU-IMAGE-NAME}:${HEROKU-IMAGE-TAG}
+
+# Raspberry Pi 3 aux rules
+
+obelisk-template/ids/raspberrypi-image.tar.gz: obelisk-template/ids/ obelisk-template/ids/nix-volume
+	docker run --rm -ti -v nix:/nix -v $(shell pwd):/app -w=/app ${NIX-IMAGE} /bin/bash -c \
+	 "rm -f obelisk-template/ids/raspberrypi-image.tar.gz && \
+	  nix-build \
+			--arg image-name '\"${RASPBERRYPI-IMAGE-NAME}\"' \
+			--arg image-tag '\"${RASPBERRYPI-IMAGE-TAG}\"' \
+			--arg crossSystem '{ config = "aarch64-unknown-linux-gnu"; }' \
+			-o obelisk-template/ids/prod-image \
+			-A raspberrypi-image \
+			obelisk-template/main.nix && \
+		cp obelisk-template/ids/prod-image obelisk-template/ids/raspberrypi-image.tar.gz && \
+		rm obelisk-template/ids/prod-image"
+
+deploy-local-raspberrypi: obelisk-template/ids/raspberrypi-image.tar.gz
+	docker load -i obelisk-template/ids/raspberrypi-image.tar.gz
+	docker run --rm -ti -p ${DEV-PORT}:${DEV-PORT} ${RASPBERRYPI-IMAGE-NAME}:${RASPBERRYPI-IMAGE-TAG}
+
+remove-raspberrypi-image:
+	docker image rm ${RASPBERRYPI-IMAGE-NAME}:${RASPBERRYPI-IMAGE-TAG}
 
 
 # TODO: make this work
@@ -99,6 +124,16 @@ remove-obelisk-files:
 obelisk-template/ids/exe:
 	docker run --rm -ti -v nix:/nix -v $(shell pwd):/app -w=/app ${NIX-IMAGE} /bin/bash -c \
 		"nix-build -A exe -o obelisk-template/ids/exe"
+
+shell-debug:
+	docker run \
+			--rm \
+			-v nix:/nix \
+			-v $$(pwd):/app \
+			-w=/app \
+			-ti \
+			${DEV-IMAGE-NAME}:${DEV-IMAGE-TAG} \
+			/bin/bash
 
 # ---- Main rules ----
 

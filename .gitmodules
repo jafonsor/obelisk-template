@@ -1,0 +1,3 @@
+[submodule "obelisk-template/obelisk"]
+	path = obelisk-template/obelisk
+	url = git@github.com:jafonsor/obelisk.git

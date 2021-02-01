@@ -1,4 +1,4 @@
-{ dockerTag ? "latest", nixpkgs, exe, image-name }:
+{ image-tag ? "latest", nixpkgs, exe, image-name }:
 
 let
 
@@ -20,7 +20,7 @@ in
 
   nixpkgs.dockerTools.buildImage {
     name = "${image-name}";
-    tag = "${dockerTag}";
+    tag = "${image-tag}";
     config = {
       Env = [ "PORT=8000" ];
       WorkingDir = "${serverExe-config}/";
